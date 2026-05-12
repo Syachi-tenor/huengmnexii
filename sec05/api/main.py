@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import ValidationError
 
-import api.schemas.message as message_schema
+from api.schemas.system import System
 from api.routers import message
 
 
@@ -14,11 +14,11 @@ def load(app):
     try:
         with open("data.json", "rt", encoding="utf-8") as f:
             data_dict = json.load(f)
-            app.state.system = message_schema.System.model_validate(data_dict)
+            app.state.system = System.model_validate(data_dict)
     except (FileNotFoundError, ValidationError):
         # ファイルが存在しない or ファイルがうまく読めない
         # →Default の System を作成する
-        app.state.system = message_schema.System()
+        app.state.system = System()
 
 
 async def save(app):
