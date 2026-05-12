@@ -160,7 +160,6 @@ function display_add_message(val) {
 
 // message を置き換え(li の中身を val で書き換える)
 function display_replace_message(val) {
-    let s = dateoption.format(Date.parse(val['time']))
     $('#messages ul li.message#' + val['id']).empty()
     $('#messages ul li.message#' + val['id']).append(display_item(val))
     register_callback(val['id'])
