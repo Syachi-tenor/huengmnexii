@@ -11,9 +11,6 @@ class MessagePost(SQLModel):
 class MessageBase(MessagePost):
     name: str | None = Field(None,
                              description="Message from")
-    message: str | None = Field(None,
-                                description="Message body")
-    important: bool = Field(False, description="Important or not")
 
 
 class Message(MessageBase, table=True):
