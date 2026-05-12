@@ -8,7 +8,8 @@ services:
     environment:
       - DATABASE_URL=postgresql+psycopg2://appuser:apppass@db:5432/appdb
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
   db:
     image: postgres:16
@@ -19,7 +20,9 @@ services:
       - POSTGRES_PASSWORD=apppass
       - POSTGRES_DB=appdb
     volumes:
-      - db_data:/var/lib/postgresql/data
-
-volumes:
-  db_data:
+      - ./db_data:/var/lib/postgresql/data
+    healthcheck :
+      test: [ "CMD", "pg_isready", "-q", "-d", "appdb", "-U", "appuser" ]
+      interval : 5s
+      timeout : 5s
+      retries : 5
