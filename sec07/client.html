@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-<title>個別課題4</title>
+<title>個別課題X</title>
 <meta charset="utf-8" />
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script>
@@ -9,8 +9,25 @@
 // サーバを指定する場合は server = 'http://192.168.11.9/' などとする
 const server = ''
 
+// 更新間隔(msec)
+const interval = 5000
+
+// interval 管理用の変数
+let interval_id = null
+
 // 編集中の message id
 let edit_id = null
+
+// 取得したサーバの時刻
+let server_time = null
+
+// filter mode (none, important, not_important)
+const filter_mode = {
+    none: 'none',
+    important: 'important',
+    not_important: 'not_important',
+}
+let filter = filter_mode.none
 
 // 時刻フォーマット
 const dateoption = new Intl.DateTimeFormat('ja-JP', {
@@ -22,9 +39,15 @@ const dateoption = new Intl.DateTimeFormat('ja-JP', {
 // GET
 async function api_request_get(url, method = 'GET') {
     try {
-        const response = await fetch(url, {
-            method: method
-        })
+        let data = { method: method }
+        const token = localStorage.getItem('token')
+        if (token) {
+            data["headers"] = {'Authorization': 'Bearer ' + token}
+        }
+        const response = await fetch(url, data)
+        if (response.status == 401) {
+            logout()
+        }
         const json = await response.json()
         return json
     } catch (err) {
@@ -36,12 +59,20 @@ async function api_request_get(url, method = 'GET') {
 // POST
 async function api_request_post(url, data, method = 'POST') {
     try {
+        let headers = { 'Content-Type': 'application/json' }
+        const token = localStorage.getItem('token')
+        if (token) {
+            headers['Authorization'] = 'Bearer ' + token
+        }
         const response = await fetch(url, {
             method: method,
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
             body: JSON.stringify(data),
         })
         const json = await response.json()
+        if (response.status == 401) {
+            logout()
+        }
         return json
     } catch (err) {
         console.error("POST失敗:", err)
@@ -66,10 +97,7 @@ async function message_post(data) {
         return api_request_post(url, data)
     } else {
         url = url + '/' + edit_id
-        console.log(data)
-        return api_request_put(url, data).then(function(value) {
-            display_replace_message(value)
-        })
+        return api_request_put(url, data)
     }
 }
 
@@ -82,42 +110,25 @@ async function message_get(id) {
 }
 
 // Message の GET (全て)
-// Message の GET (重要メッセージのみ)
-async function message_get_important() {
-    let url = server + '/messages/important' // または '/messages' (APIの仕様に合わせてください)
-    api_request_get(url).then(function(value) {
-        // メッセージの配列を取得
-        let messages = value['messages'];
-        let keys = Object.keys(messages).reverse();
-        
-        $('#messages ul').empty();
-        
-        // 重要（important: true）なものだけを抽出
-        let importantMessages = keys.filter(key => messages[key].important === true);
-
-        if (importantMessages.length === 0) {
-            $('#messages ul').append(`<li class="message">重要なメッセージはありません</li>`);
-        } else {
-            for (let i = 0; i < importantMessages.length; i++) {
-                display_add_message(messages[importantMessages[i]]);
-            }
-        }
-    })
-}
-
-
 async function message_get_all() {
     let url = server + '/messages'
+    if (server_time !== null) {
+        const params = { from_time: server_time }
+        const search_params = new URLSearchParams(params)
+        url += '?' + search_params.toString()
+    }
     api_request_get(url).then(function(value) {
-        let a = Object.keys(value['messages']).reverse()
-        $('#messages ul').empty()
-        if (a.length == 0) {
-            $('#messages ul').append(`<li class="message">ここにはなにもない</li>`)
+        if (Object.keys(value['messages']).length == 0) {
+            if (!$('#messages ul li.message').length) {
+                $('#messages ul').prepend(`<li class="message" id="dummy">ここにはなにもない</li>`)
+            }
         } else {
-            for (let i = 0; i < a.length; i++) {
-                display_add_message(value['messages'][a[i]])
+            $('#messages ul .message#dummy').remove()
+            for(let i in value['messages']) {
+                display_add_message(value['messages'][i])
             }
         }
+        server_time = value['current_time']
     })
 }
 
@@ -127,9 +138,8 @@ function register_callback(message_id) {
     $('button#' + message_id + '.delete').off('click').on(
         'click', function() {
             let url = server + '/messages/' + this.id
-            api_request_delete(url).then(function() {
-                $(this).parent().remove()
-            }.bind(this))
+            api_request_delete(url)
+            $(this).parent().remove()
         }
     )
     // EDITボタンが押された時
@@ -138,29 +148,29 @@ function register_callback(message_id) {
             edit_id = this.id
             let url = server + '/messages/' + edit_id
             api_request_get(url).then(function(value) {
-                $('#post_message_name').val(value['name'])
                 $('#post_message_message').val(value['message'])
                 $('button#post_message').html('PUT')
                 $('h3#post').html('PUT ' + edit_id)
+                if (value['important']) {
+                    $('#post_message_important').attr('checked', true)
+                } else {
+                    $('#post_message_important').attr('checked', false)
+                }
             })
         }
     )
     // ☆/★ボタンが押された時
     $('button#' + message_id + '.toggle_important').off('click').on(
         'click', function() {
-            const toggle_id = this.id
-            let url = server + '/messages/' + toggle_id + '/important'
+            let url = server + '/messages/' + this.id + '/important'
             api_request_get(url).then(function(value) {
-                console.log(value['important'])
                 if (value['important']) { // ★の時
-                    api_request_delete(url).then(function() {
-                        message_get(toggle_id)
-                    })
+                    return api_request_delete(url)
                 } else { // ☆の時
-                    api_request_put(url).then(function() {
-                        message_get(toggle_id)
-                    })
+                    return api_request_put(url)
                 }
+            }).then(function() {
+                message_get_all()
             })
         }
     )
@@ -173,28 +183,47 @@ function display_item(val) {
         i = '★'
     }
     let s = dateoption.format(Date.parse(val['time']))
-    return `${val['id']} ${val['name']}:<br />${val['message']}<br />${s}<br /><button class='delete' id="${val['id']}">Delete</button><button class="edit" id="${val['id']}">Edit</button><button class="toggle_important" id="${val['id']}">${i}</button>`
+    let s_update = dateoption.format(Date.parse(val['update_time']))
+    return `${val['id']} ${val['name']}:<br />${val['message']}<br />Time: ${s}<br />Update: ${s_update}<br /><button class='delete' id="${val['id']}">Delete</button><button class="edit" id="${val['id']}">Edit</button><button class="toggle_important" id="${val['id']}">${i}</button>`
 }
 
 // message を li として ul に追加
 function display_add_message(val) {
-    $('#messages ul').append(`<li class="message" id="${val['id']}">${display_item(val)}</li>`)
-    register_callback(val['id'])
+    if ($('#messages ul li.message#' + val['id']).length == 0) {
+        // まだ存在しない場合は li を作成
+        $('#messages ul').prepend(`<li class="message" id="${val['id']}"></li>`)
+        $('#messages ul li.message#' + val['id']).hide()
+    }
+    display_replace_message(val)
 }
 
-// message を置き換え(li の中身を val で書き換える)
+// message の置き換え(li の中身を val で書き換える)
+// filter の条件に応じて消したり表示したり
 function display_replace_message(val) {
     $('#messages ul li.message#' + val['id']).empty()
     $('#messages ul li.message#' + val['id']).append(display_item(val))
+    if (val['important']) {
+        $('#messages ul li.message#' + val['id']).append('<div class="important"></div>')
+        if (filter == filter_mode.not_important) {
+            $('#messages ul li.message#' + val['id']).fadeOut()
+        } else {
+            $('#messages ul li.message#' + val['id']).hide()
+            $('#messages ul li.message#' + val['id']).fadeIn()
+        }
+    } else {
+        $('#messages ul li.message#' + val['id']).append('<div class="not_important"></div>')
+        if (filter == filter_mode.important) {
+            $('#messages ul li.message#' + val['id']).fadeOut()
+        } else {
+            $('#messages ul li.message#' + val['id']).hide()
+            $('#messages ul li.message#' + val['id']).fadeIn()
+        }
+    }
     register_callback(val['id'])
 }
 
 // HTMLロード後，基本オブジェクトに callback を追加
 $(function () {
-    $('button#get_important_message').on(
-        'click', function () {
-            message_get_important()
-        })
     $('button#get_message').on(
         'click', function () {
             message_get_all()
@@ -202,17 +231,20 @@ $(function () {
     $('button#post_message').on(
         'click', function () {
             let data = {
-                name: $('#post_message_name').val().trim(),
                 message: $('#post_message_message').val().trim(),
+                important: $('#post_message_important').prop('checked')
             }
-            if (data['name'].length == 0 || data['message'].length == 0) {
+            if (data['message'].length == 0) {
                 return
             }
-            message_post(data)
+            message_post(data).then(function() {
+                message_get_all()
+            })
         })
     $('button#get_message_clear').on(
         'click', function () {
             $('#messages ul').empty()
+            server_time = null
         })
     $('button#post_message_clear').on(
         'click', function () {
@@ -222,12 +254,29 @@ $(function () {
             $('#post_message_result').empty()
             $('#post_message_message').val('')
         })
-    message_get_all()
+    $('button#filter_all').on(
+        'click', function () {
+            $('#messages ul li.message').show()
+            filter = filter_mode.none
+        })
+    $('button#filter_not_important').on(
+        'click', function () {
+            $('#messages ul li.message').hide()
+            $('#messages ul li.message .not_important').parent().show()
+            filter = filter_mode.not_important
+        })
+    $('button#filter_important').on(
+        'click', function () {
+            $('#messages ul li.message').hide()
+            $('#messages ul li.message .important').parent().show()
+            filter = filter_mode.important
+        })
 })
 </script>
+<script src="main.js"></script>
 <style>
 /* スタイルシート お好みで．．． */
-input {
+input[type=text] {
     width: 95%;
 }
 ul {
@@ -274,18 +323,34 @@ button.toggle_important:hover {
 </head>
 <body>
 
+<div id="login">
+<label>Username:</label>
+<input type="text" id="login_username" name="username"><br />
+<label>Password:</label>
+<input type="password" id="login_password" name="password"><br />
+<button id="login_button">LOGIN</button>
+<button id="sign_up_button">SIGN UP</button><br />
+<div id="login_message"></div>
+</div>
+
+<div id="main">
+<button id="logout_button">LOGOUT</button>
 <h3 id="post">POST</h3>
 
 <ul>
-<li><label for="post_message_name">Name:</label>
-<input type="text" id="post_message_name" name="name"></li>
+<li id="post_message_name_display">Name:</li>
+</ul>
+<ul>
 <li><label for="post_message_message">Message:</label>
 <input type="text" id="post_message_message" name="message"></li>
+</ul>
+<ul>
+<li><label for="post_message_important">Important:</label>
+<input id="post_message_important" type="checkbox"></li>
 </ul>
 
 <ul>
 <li><button id="post_message" type='button'>POST</button></li>
-
 <li><button id="post_message_clear" type='button'>Clear</button></li>
 </ul>
 
@@ -293,11 +358,19 @@ button.toggle_important:hover {
 
 <ul>
 <li><button id="get_message">GET</button></li>
-<li><button id="get_important_message">GET (important only)</button></li>
 <li><button id="get_message_clear">Clear</button></li>
 </ul>
 
+<h3>Filter</h3>
+
+<ul>
+<li><button id="filter_all">ALL</button></li>
+<li><button id="filter_important">★</button></li>
+<li><button id="filter_not_important">☆</button></li>
+</ul>
+
 <div id="messages"><ul></ul></div>
+</div>
 
 </body>
 </html>

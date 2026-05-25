@@ -25,7 +25,7 @@ title: |-
 
 上記のように以下のファイルを配置し[^tree]，`uvicorn api.main:app`により `api/main.py` で定義したAPIを有するサーバを起動する(仮想環境を有効化することを忘れずに)．
 
-[sec03.zip](sec03.zip)をダウンロードし，`sec03.zip`があるディレクトリにて `unzip sec03.zip` を実行すれば展開される(今いるディレクトリに展開されるので注意すること; 個別にダウンロードしても良いし GitHub から取り出したものを利用しても良い)．
+[sec03.zip](sec03.zip)をダウンロードし，`sec03.zip`があるディレクトリにて `unzip sec03.zip` を実行すれば展開される(今いるディレクトリに展開されるので注意すること; 個別にダウンロードしてもよいし GitHub から取り出したものを利用してもよい)．
 
 [^tree]: この図は`tree --charset=ascii --dirsfirst -F`により取得した．ディレクトリの構造をツリー状に表示するコマンドである`tree`については`man tree`参照．
 
@@ -311,7 +311,7 @@ async def get_client():
 
 サンプルでは，メッセージとともに画像データも送れるようになっている(画像がなくてもメッセージを送れる)．
 
-適当/適切な画像データ(問題となるような画像は用いないこと)を用意してサーバに送ってみる．いくつか画像を [images-sample/](images-sample/) に用意しているのでこれを用いても良い．サーバに送った後に `GET` すると画像が取得・表示される．
+適当/適切な画像データ(問題となるような画像は用いないこと)を用意してサーバに送ってみる．いくつか画像を [images-sample/](images-sample/) に用意しているのでこれを用いてもよい．サーバに送った後に `GET` すると画像が取得・表示される．
 
 なお，<http://127.0.0.1:8000/> ではなく <http://localhost:8000/> を開いている場合，`http://127.0.0.1:8000/message` 宛に GET や POST のリクエストを送ると[CORS違反](sec01.html#cross-origin-resource-sharing-cors)になる(`localhost` の IP アドレスは通常 `127.0.0.1` であるが，`localhost` と `127.0.0.1` は異なるオリジンであるとみなされる)．<http://localhost:8000/> からは `http://localhost:8000/message` 宛に GET や POST のリクエストを送る必要がある．
 
@@ -435,7 +435,7 @@ app = FastAPI(lifespan=lifespan)
 大きな画像を送ると `data.json` のサイズが大きくなるので注意すること(ファイルの保存に時間を要するかも知れない)．Base64 符号化により画像データのサイズが大きくなる．
 
 また，クライアントはその API をテストするサーバのページ(サーバの IP アドレスを
-`192.168.11.13` とした場合 `http://192.168.11.13:8000/`)か，client.html をダウンロードして開いたものを利用すること．たとえば `http://192.168.11.13:8000/` から `http://192.168.11.14:8000/message` に GET/POST しようとするとエラーが生じる([CORS違反](sec01.html#cross-origin-resource-sharing-cors)になる)．
+`192.168.11.13` とした場合 `http://192.168.11.13:8000/`)か，client.html をダウンロードして開いたものを利用すること．たとえば `http://192.168.11.14:8000/` から `http://192.168.11.13:8000/message` に GET/POST しようとするとエラーが生じる([CORS違反](sec01.html#cross-origin-resource-sharing-cors)になる)．
 
 ---
 
@@ -541,13 +541,13 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 JSONに似た形式としては[YAML (Yet Another Markup Language)](https://en.wikipedia.org/wiki/YAML)がある．YAMLは人手で書きやすいので，プログラムに読み込ませる設定ファイル等で利用される印象がある．
 
-また，Pythonで単に変数をファイルに保存したい場合は [pickle](https://docs.python.org/3/library/pickle.html) [^pickle] を用いるのが効率が良い(バイナリデータとしてシリアライズされる)．Rubyでは[Marshal](https://docs.ruby-lang.org/ja/latest/class/Marshal.html)がこれに相当する．
+また，Pythonで単に変数をファイルに保存したい場合は [pickle](https://docs.python.org/3/library/pickle.html) [^pickle] を用いるのが効率がよい(バイナリデータとしてシリアライズされる)．Rubyでは[Marshal](https://docs.ruby-lang.org/ja/latest/class/Marshal.html)がこれに相当する．
 
 [^pickle]: ピックル(=漬物，ピクルス)
 
 ## 追加課題のヒント ##
 
-「メッセージをリストとして保持する」型を作成すれば良い．
+「メッセージをリストとして保持する」型を作成すればよい．
 
 ```diff
 --- sec03/api/schemas/message.py	2026-04-12 05:09:39.409540242 +0900
@@ -573,7 +573,7 @@ JSONに似た形式としては[YAML (Yet Another Markup Language)](https://en.w
 -   `GET` でサーバに保存されている `Message` を要求された際は，
     たとえば最新(`app.state.messages` の末尾)の `Message` を返す
 
-これでは，過去の `Message` は保存はされているが，クライアントから `GET` で取得することができない．では，リストの任意の `Message` を `GET` で取得できるようにするにはどのようにすれば良いだろうか．次回取り扱うが，調べたり考えてみると面白いかもしれない．少なくとも何番の `Message` が必要なのかをクライアントからサーバに伝える必要がある．
+これでは，過去の `Message` は保存はされているが，クライアントから `GET` で取得することができない．では，リストの任意の `Message` を `GET` で取得できるようにするにはどのようにすればよいだろうか．次回取り扱うが，調べたり考えてみると面白いかもしれない．少なくとも何番の `Message` が必要なのかをクライアントからサーバに伝える必要がある．
 
 ## おまけ(静的ファイル) ##
 
@@ -590,7 +590,7 @@ async def get_client():
 
 とはいえ1つずつファイル(とURLの対応)を定義するのは大変なのでFastAPIには [`mount`](https://fastapi.tiangolo.com/ja/tutorial/static-files/) と呼ばれる機能が存在する．たとえば以下のように使う[^html_option]．
 
-[^html_option]: `html=True` は `example/` にアクセスされた際に `example/index.html` が存在すれがそれを返すオプション．
+[^html_option]: `html=True` は `example/` にアクセスされた際に `example/index.html` が存在すればそれを返すオプション．
 
 [`api/main.py`](../sec03-mount/api/main.py)
 
@@ -607,7 +607,7 @@ app.mount("/", StaticFiles(directory="static", html=True))
 
 [ネットワーク構成論の演習](https://csw.ist.hokudai.ac.jp/network/#exii)で利用する[サンプルデータ](https://csw.ist.hokudai.ac.jp/~tsutsui/ex/server.zip)に静的Webページのデータ(写真のサムネイルたくさん)が含まれるので，それを `static/` に配置して FastAPI を起動してみよ(ネットワーク構成論の演習ではこの FastAPI に変わるものを自作する)．
 
-ダウンロードして展開するのが面倒な場合は，以下のコマンドを実行すると `server/` というディレクトリができるので，その中のファイル(群)を利用すれば良い．具体的には `server/data/` を `static/` に移動する．
+ダウンロードして展開するのが面倒な場合は，以下のコマンドを実行すると `server/` というディレクトリができるので，その中のファイル(群)を利用すればよい．具体的には `server/data/` を `static/` に移動する．
 
 ```
 wget -q -O - http://goo.gl/XXXXXX(非公開) | tar zxv

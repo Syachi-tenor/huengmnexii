@@ -14,7 +14,7 @@ title: |-
 
 ### サーバ ###
 
-以下のように`api/main.py`と`api/schemas/message.py`をダウンロードして配置し[^tree]，`uvicorn api.main:app`により以下で定義したAPIを有するサーバを起動する(仮想環境を有効化することを忘れずに)．
+以下のように`api/main.py`と`api/schemas/message.py`をダウンロードして配置し[^tree]，`uvicorn api.main:app`により以下で定義したAPIを有するサーバを起動する(仮想環境を有効化することを忘れずに)．GitHub から取り出したものを利用してもよい．
 
 [^tree]: この図は`tree --charset=ascii --dirsfirst -F`により取得した．ディレクトリの構造をツリー状に表示するコマンドである`tree`については`man tree`参照．
 
@@ -226,7 +226,7 @@ input {
 
 ## 班内で情報共有する仕組みを確立する ##
 
-(これは後でやっても良い．先に[ネットワークの準備]\(←おそらく時間がかかる)ができた人がGoogle Chatのスペースを作成するなど)
+(これは後でやってもよい．先に[ネットワークの準備](#ネットワークの準備)(←おそらく時間がかかる)ができた人がGoogle Chatのスペースを作成するなど)
 
 班内で IP address を伝え合う必要がある(あるいは今後の自由製作課題でファイルをやり取りする必要が生じるので)ので，なんらかのコラボレーションツール(チャットやファイル共有ができるもの)を使うことを強くオススメする．
 
@@ -234,7 +234,7 @@ input {
 
 特に好みがなければ[Google Chat](https://chat.google.com/)をELMSのGoogle Accountで利用するのが最も簡単(全員アカウントを持っているので)．以下に簡単に設定方法を紹介する．
 
-代表者が[スペース](https://support.google.com/chat/answer/7659784?hl=ja)を作成して，班のメンバをスペースに参加させる(メールアドレスの入力が必要)．一旦作成してしまえば，各自のPCから発言できる．スペースは[Google Chat](https://chat.google.com/) (ELMSのGoogle Accountになっていることを確認すること)の以下の `New chat` の箇所から作成できる．Space name は適当に決める(案がなければ『20XX年度MN演習II○班』や『○○と愉快な仲間たち』など何でも良い; 後で変更できる)．
+代表者が[スペース](https://support.google.com/chat/answer/7659784?hl=ja)を作成して，班のメンバをスペースに参加させる(メールアドレスの入力が必要)．一旦作成してしまえば，各自のPCから発言できる．スペースは[Google Chat](https://chat.google.com/) (ELMSのGoogle Accountになっていることを確認すること)の以下の `New chat` の箇所から作成できる．Space name は適当に決める(案がなければ『20XX年度MN演習II○班』や『○○と愉快な仲間たち』など何でもよい; 後で変更できる)．
 
 ![](images/sec02_google_chat1.png)
 
@@ -246,7 +246,7 @@ input {
 
 注意: 演習の際にWiFiで接続するネットワークのプロファイルは**プライベート**としておくこと．
 
-DefaultのWindows + WSL環境では以下の2つのIPアドレスが存在する([IPアドレスを調べる]を参照して自身のネットワーク上でのIPアドレスを調べると良い)．
+DefaultのWindows + WSL環境では以下の2つのIPアドレスが存在する([IPアドレスを調べる]を参照して自身のネットワーク上でのIPアドレスを調べるとよい)．
 
 -   Windows の IP アドレス
 -   WSL の IP アドレス
@@ -310,7 +310,7 @@ uvicorn api.main:app --host 0.0.0.0
 
 ### WSL Networking mode NAT の場合 ###
 
-**Networking mode を Mirrored に変更した場合は，この箇所は飛ばして良い**
+**Networking mode を Mirrored に変更した場合は，この箇所は飛ばしてよい**
 
 たとえば WSL の IP アドレスが `172.28.139.139` であるとして，この IP アドレスでサーバを起動するには，以下のように`--host`オプションを利用する．
 
@@ -356,9 +356,9 @@ Windowsの場合(Macでも同様かもしれない; [参考](https://support.app
 
 [^port]: ネットワーク構成論の講義や演習でやります．
 
-`Windows Defender Firewall with Advanced Security` (日本語では「セキュリティが強化された Windows Defender ファイアウォール」[^english_windows]; WFAS)を開いて，`Inbound Rules` に以下の `New Rule` を追加する．なお，試した範囲ではOSの再起動は不要である(うまく動作しない場合は再起動を試してみるのも良い)．
+`Windows Defender Firewall with Advanced Security` (日本語では「セキュリティが強化された Windows Defender ファイアウォール」[^english_windows]; WFAS)を開いて，`Inbound Rules` に以下の `New Rule` を追加する．なお，試した範囲ではOSの再起動は不要である(うまく動作しない場合は再起動を試してみるのもよい)．
 
-[^english_windows]: Windows を日本語の設定で利用しているとこのように用語が複雑で直感的でないので，Windows (に限らず開発元言語が英語のもの)は英語の設定で利用したほうが良いと著者は考えている．Windows キーから検索する際に英語で検索した方が簡単に目的のものを探すことができる．
+[^english_windows]: Windows を日本語の設定で利用しているとこのように用語が複雑で直感的でないので，Windows (に限らず開発元言語が英語のもの)は英語の設定で利用したほうがよいと著者は考えている．Windows キーから検索する際に英語で検索した方が簡単に目的のものを探すことができる．
 
 -   Rule Type: Port
 -   Name: fastapi 等適当で構わない(後で思い出せるような名前にしておく)
@@ -382,7 +382,7 @@ Windowsの場合(Macでも同様かもしれない; [参考](https://support.app
 
 ### Portフォワーディングの設定 ###
 
-**Networking mode を Mirrored に変更した場合は，この箇所は飛ばして良い**
+**Networking mode を Mirrored に変更した場合は，この箇所は飛ばしてよい**
 
 Windows において，以下により外部からの通信を内部に転送する設定を行う．ここでは以下の想定をしている．
 

@@ -5,13 +5,16 @@ from fastapi import Depends
 
 from api.db import get_system
 from api.schemas.system import System, Response
-from api.schemas.message import Message, MessageBase
+from api.schemas.user import User
+from api.schemas.message import Message, MessagePost
+from .user import get_current_active_user
 
 router = APIRouter()
 
 
 @router.get("/messages", response_model=Response)
 async def get_messages(system: System = Depends(get_system),
+                       current_user: User = Depends(get_current_active_user),
                        from_id: int | None = 1, to_id: int | None = None,
                        from_time: datetime | None = None,
                        important: bool | None = None,
@@ -46,18 +49,21 @@ async def get_messages(system: System = Depends(get_system),
 
 
 @router.get("/messages/current_id")
-async def get_messages_current_id(system: System = Depends(get_system)):
+async def get_messages_current_id(system: System = Depends(get_system),
+                                  current_user: User = Depends(get_current_active_user)):
     return {"current_id": system.current_id}
 
 
 @router.post("/messages", response_model=Message)
-async def post_message(message: MessageBase,
-                       system: System = Depends(get_system)):
+async def post_message(message: MessagePost,
+                       system: System = Depends(get_system),
+                       current_user: User = Depends(get_current_active_user)):
     """message のPOST"""
     next_id = system.current_id + 1
     now = datetime.now()
     m = Message(
         id=next_id,
+        name=current_user.username,
         time=now,
         update_time=now,
         **message.model_dump(),
@@ -69,7 +75,8 @@ async def post_message(message: MessageBase,
 
 @router.get("/messages/{message_id}", response_model=Message)
 async def get_message(message_id: int,
-                      system: System = Depends(get_system), ):
+                      system: System = Depends(get_system),
+                      current_user: User = Depends(get_current_active_user)):
     """個別 message のGET"""
     # 該当 ID の message が存在しない場合は 404 を返す(他の関数でも同様)
     if message_id not in system.messages:
@@ -81,8 +88,9 @@ async def get_message(message_id: int,
 
 @router.put("/messages/{message_id}", response_model=Message)
 async def put_message(message_id: int,
-                      message: MessageBase,
-                      system: System = Depends(get_system)):
+                      message: MessagePost,
+                      system: System = Depends(get_system),
+                      current_user: User = Depends(get_current_active_user)):
     """message のPUT"""
     if message_id not in system.messages:
         raise HTTPException(status_code=404,
@@ -98,7 +106,8 @@ async def put_message(message_id: int,
 
 @router.delete("/messages/{message_id}")
 async def delete_message(message_id: int,
-                         system: System = Depends(get_system)):
+                         system: System = Depends(get_system),
+                         current_user: User = Depends(get_current_active_user)):
     """message のDELETE"""
     if message_id not in system.messages:
         raise HTTPException(status_code=404,
@@ -110,7 +119,8 @@ async def delete_message(message_id: int,
 
 @router.get("/messages/{message_id}/important")
 async def get_message_important(message_id: int,
-                                system: System = Depends(get_system)):
+                                system: System = Depends(get_system),
+                                current_user: User = Depends(get_current_active_user)):
     """message important flag の GET """
     if message_id not in system.messages:
         raise HTTPException(status_code=404,
@@ -121,7 +131,8 @@ async def get_message_important(message_id: int,
 
 @router.put("/messages/{message_id}/important")
 async def put_message_important(message_id: int,
-                                system: System = Depends(get_system)):
+                                system: System = Depends(get_system),
+                                current_user: User = Depends(get_current_active_user)):
     """message important flag の PUT (important = True)"""
     if message_id not in system.messages:
         raise HTTPException(status_code=404,
@@ -135,7 +146,8 @@ async def put_message_important(message_id: int,
 
 @router.delete("/messages/{message_id}/important")
 async def delete_message_important(message_id: int,
-                                   system: System = Depends(get_system)):
+                                   system: System = Depends(get_system),
+                                   current_user: User = Depends(get_current_active_user)):
     """message important flag の DELETE (important = False)"""
     if message_id not in system.messages:
         raise HTTPException(status_code=404,

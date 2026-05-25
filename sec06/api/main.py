@@ -3,11 +3,11 @@ import json
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import ValidationError
 
 from api.schemas.system import System
-from api.routers import message
+from api.routers import message, user
 
 
 def load(app):
@@ -51,4 +51,10 @@ async def get_client():
     return data
 
 
+@app.get("/main.js", response_class=FileResponse)
+async def get_main_js():
+    return FileResponse("main.js", media_type="text/javascript")
+
+
 app.include_router(message.router)
+app.include_router(user.router)

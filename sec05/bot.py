@@ -15,7 +15,7 @@ class Bot():
     def post_message(self, name, message):
         url = f"{self.base_url}/messages"
         m = api.schemas.message.MessageBase(name=name, message=message)
-        requests.post(url, data=json.dumps(m.model_dump()))
+        requests.post(url, json=m.model_dump())
 
     def get_message(self, message_id):
         url = f"{self.base_url}/messages/{message_id}"
