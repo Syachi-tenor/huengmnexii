@@ -13,6 +13,14 @@ async def get_messages(request: Request):
     """全ての message を返す"""
     return request.app.state.messages
 
+@router.get("/messages/important", response_model=message_schema.Messages)
+async def get_messages(request: Request):
+    """全ての message を返す"""
+    important_messages = []
+    for message in request.app.state.messages.messages:
+        if (message.important == True):
+            important_messages.apeend
+    return important_messages
 
 @router.post("/messages", response_model=message_schema.Message)
 async def post_message(request: Request, message: message_schema.MessageBase):
@@ -65,7 +73,7 @@ async def get_message_important(request: Request, message_id: int):
         raise HTTPException(status_code=404,
                             detail="Message cannot be found")
     # get_message_important
-    important = True
+    important = request.app.state.messages.messages[message_id].important
     return {"important": important}
 
 
@@ -76,6 +84,7 @@ async def put_message_important(request: Request, message_id: int):
         raise HTTPException(status_code=404,
                             detail="Message cannot be found")
     # put_message_important
+    request.app.state.messages.messages[message_id].important = True
     return {"success": True}
 
 
@@ -86,4 +95,5 @@ async def delete_message_important(request: Request, message_id: int):
         raise HTTPException(status_code=404,
                             detail="Message cannot be found")
     # delete_message_important
+    request.app.state.messages.messages[message_id].important = False
     return {"success": True}

@@ -82,6 +82,30 @@ async function message_get(id) {
 }
 
 // Message の GET (全て)
+// Message の GET (重要メッセージのみ)
+async function message_get_important() {
+    let url = server + '/messages/important' // または '/messages' (APIの仕様に合わせてください)
+    api_request_get(url).then(function(value) {
+        // メッセージの配列を取得
+        let messages = value['messages'];
+        let keys = Object.keys(messages).reverse();
+        
+        $('#messages ul').empty();
+        
+        // 重要（important: true）なものだけを抽出
+        let importantMessages = keys.filter(key => messages[key].important === true);
+
+        if (importantMessages.length === 0) {
+            $('#messages ul').append(`<li class="message">重要なメッセージはありません</li>`);
+        } else {
+            for (let i = 0; i < importantMessages.length; i++) {
+                display_add_message(messages[importantMessages[i]]);
+            }
+        }
+    })
+}
+
+
 async function message_get_all() {
     let url = server + '/messages'
     api_request_get(url).then(function(value) {
@@ -168,6 +192,10 @@ function display_replace_message(val) {
 
 // HTMLロード後，基本オブジェクトに callback を追加
 $(function () {
+    $('button#get_important_message').on(
+        'click', function () {
+            message_get_important()
+        })
     $('button#get_message').on(
         'click', function () {
             message_get_all()
@@ -258,6 +286,7 @@ button.toggle_important:hover {
 
 <ul>
 <li><button id="post_message" type='button'>POST</button></li>
+
 <li><button id="post_message_clear" type='button'>Clear</button></li>
 </ul>
 
@@ -265,6 +294,7 @@ button.toggle_important:hover {
 
 <ul>
 <li><button id="get_message">GET</button></li>
+<li><button id="get_important_message">GET (important only)</button></li>
 <li><button id="get_message_clear">Clear</button></li>
 </ul>
 
